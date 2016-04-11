@@ -113,9 +113,7 @@ class captcha:
         self.clear()
         self.text2String()
 
-    def saveImg(self, name = None):
-        if name == None:
-            name = self.imgname
+    def saveImg(self, name):
         self.img.save("out/"+name+"-"+self.imgname.replace("test/", ""))
 
     def clear(self):
@@ -132,12 +130,15 @@ total = len(pics)
 wrong = 0.0
 
 def main(pic):
-    i = captcha('test/'+pic)
-    i.captcha()
-    return i.imgname, i.text
-    if i.imgname.replace(".png","").replace("test/", "") !=  i.text:
-        i.saveImg()
-    i.closeImg()
+    try:
+        i = captcha('test/'+pic)
+        i.captcha()
+        tname = i.imgname.replace(".png","").replace("test/", "")
+        if tname !=  i.text:
+            i.saveImg(tname)
+        return i.imgname, i.text
+    finally:
+        i.closeImg()
 
 # Make the Pool of workers
 pool = Pool()
