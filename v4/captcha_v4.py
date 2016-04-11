@@ -1,10 +1,8 @@
 # coding=utf-8
-import Image
-import ImageEnhance
-import ImageFilter
-import sys
-import os
+from PIL import Image
 from pytesseract import *
+from multiprocessing import Pool 
+import os
 
 pics = os.walk('test').next()[2]
 # pics = ["1756.png", "2846.png", "3294.png", "3882.png", "6484.png", "7814.png", "9922.png"]
@@ -77,11 +75,11 @@ class captcha:
         for r in rep:
             self.text = self.text.replace(r, rep[r])
         if not self.text.isalnum():
-            print self.text
+            # print self.text
             self.text = image_to_string(self.img, config="-l eng")
         for r in rep:
             self.text = self.text.replace(r, rep[r])
-        print self.text
+        # print self.text
 
     def scan(self):
         self.w, self.h = self.size
@@ -115,7 +113,9 @@ class captcha:
         self.clear()
         self.text2String()
 
-    def saveImg(self, name):
+    def saveImg(self, name = None):
+        if name == None:
+            name = self.imgname
         self.img.save("out/"+name+"-"+self.imgname.replace("test/", ""))
 
     def clear(self):
@@ -131,15 +131,22 @@ class captcha:
 total = len(pics)
 wrong = 0.0
 
-for pic in pics:
+def main(pic):
     i = captcha('test/'+pic)
     i.captcha()
-    if i.imgname.replace(".png","").replace("test/", "") != i.text:
-        # print i.imgname.replace(".png","").replace("test/", ""), i.text
-        # print i.imgname, i.text
-        # print "###"
-        wrong += 1
-        i.saveImg(i.text)
+    return i.imgname, i.text
+    if i.imgname.replace(".png","").replace("test/", "") !=  i.text:
+        i.saveImg()
     i.closeImg()
+
+# Make the Pool of workers
+pool = Pool()
+results = pool.map(main, pics)
+pool.close()
+pool.join()
+
+for re in results:
+    if re[1] != re[0].replace(".png","").replace("test/", ""):
+        wrong += 1
 
 print '%.1f' % int(wrong/total*100) + ' %'
